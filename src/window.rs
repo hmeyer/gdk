@@ -2,20 +2,16 @@
 // See the COPYRIGHT file at the top-level directory of this distribution.
 // Licensed under the MIT license, see the LICENSE file or <http://opensource.org/licenses/MIT>
 
-//! Windows — Onscreen display areas in the target window system
-
 use std::mem;
 use std::ptr;
 use libc::{c_char, c_int};
 use glib::translate::*;
-use glib::types;
 use cairo;
 use cursor::Cursor;
 use device::Device;
 use display::Display;
 #[cfg(gdk_3_8)]
 use frame_clock::FrameClock;
-use object::Object;
 use screen::Screen;
 use visual::Visual;
 use ffi;
@@ -31,31 +27,18 @@ use {
     WMFunction,
 };
 
-/// Attributes to use for a newly-created window.
 pub struct Attributes {
-    /// title of the window (for toplevel windows)
     pub title: Option<String>,
-    /// event mask (see [gdk_window_set_events()](https://developer.gnome.org/gdk3/3.14/gdk3-Windows.html#gdk-window-set-events))
     pub event_mask: i32,
-    /// X coordinate relative to parent window
     pub x: Option<i32>,
-    /// Y coordinate relative to parent window
     pub y: Option<i32>,
-    /// width of window
     pub width: i32,
-    /// height of window
     pub height: i32,
-    /// GDK_INPUT_OUTPUT (normal window) or GDK_INPUT_ONLY (invisible window that receives events)
     pub wclass: WindowWindowClass,
-    /// GdkVisual for window
     pub visual: Option<Visual>,
-    /// type of window
     pub window_type: WindowType,
-    /// cursor for the window
     pub cursor: Option<Cursor>,
-    /// TRUE to bypass the window manager
     pub override_redirect: bool,
-    /// a hint of the function of the window
     pub type_hint: Option<WindowTypeHint>,
 }
 
@@ -73,18 +56,18 @@ impl Attributes {
     }
 }
 
-impl<'a> ToGlibPtr<'a, *mut ffi::GdkWindowAttr> for &'a Attributes {
+impl<'a> ToGlibPtr<'a, *mut ffi::GdkWindowAttr> for Attributes {
     type Storage = (
         Box<ffi::GdkWindowAttr>,
-        Stash<'a, *mut ffi::GdkVisual, Option<&'a Visual>>,
-        Stash<'a, *mut ffi::GdkCursor, Option<&'a Cursor>>,
+        Stash<'a, *mut ffi::GdkVisual, Option<Visual>>,
+        Stash<'a, *mut ffi::GdkCursor, Option<Cursor>>,
         Stash<'a, *const c_char, Option<String>>,
     );
 
-    fn to_glib_none(&self) -> Stash<'a, *mut ffi::GdkWindowAttr, &'a Attributes> {
+    fn to_glib_none(&'a self) -> Stash<'a, *mut ffi::GdkWindowAttr, Self> {
         let title = self.title.to_glib_none();
-        let visual = self.visual.as_ref().to_glib_none();
-        let cursor = self.cursor.as_ref().to_glib_none();
+        let visual = self.visual.to_glib_none();
+        let cursor = self.cursor.to_glib_none();
 
         let mut attrs = Box::new(ffi::GdkWindowAttr {
             title: title.0 as *mut c_char,
@@ -107,14 +90,17 @@ impl<'a> ToGlibPtr<'a, *mut ffi::GdkWindowAttr> for &'a Attributes {
     }
 }
 
-pub type Window = Object<ffi::GdkWindow>;
+glib_wrapper! {
+    pub struct Window(Object<ffi::GdkWindow>);
 
-impl types::StaticType for Window {
-    fn static_type() -> types::Type { unsafe { from_glib(ffi::gdk_window_get_type()) } }
+    match fn {
+        get_type => || ffi::gdk_window_get_type(),
+    }
 }
 
 impl Window {
     pub fn new(parent: Option<&Window>, attributes: &Attributes) -> Window {
+        assert_initialized_main_thread!();
         unsafe {
             from_glib_full(ffi::gdk_window_new(
                 parent.to_glib_none().0,
@@ -355,6 +341,7 @@ impl Window {
     }
 
     pub fn process_all_updates() {
+        assert_initialized_main_thread!();
         unsafe { ffi::gdk_window_process_all_updates() }
     }
 
@@ -363,6 +350,7 @@ impl Window {
     }
 
     pub fn set_debug_updates(setting: bool) {
+        assert_initialized_main_thread!();
         unsafe { ffi::gdk_window_set_debug_updates(setting.to_glib()) }
     }
 
@@ -608,6 +596,7 @@ impl Window {
     }
 
     pub fn get_default_root_window() -> Window {
+        assert_initialized_main_thread!();
         unsafe { from_glib_none(ffi::gdk_get_default_root_window()) }
     }
 

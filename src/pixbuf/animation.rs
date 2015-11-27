@@ -2,21 +2,20 @@
 // See the COPYRIGHT file at the top-level directory of this distribution.
 // Licensed under the MIT license, see the LICENSE file or <http://opensource.org/licenses/MIT>
 
-//! Animations — Animated images.
-
 use std::mem;
 use std::ptr;
 use glib::{Error, GlibContainer, TimeVal};
+use glib::object::Upcast;
 use glib::translate::*;
-use glib::types::{StaticType, Type};
-use object::{Object, Upcast};
 use gdk_pixbuf_ffi as ffi;
 use super::Pixbuf;
 
-pub type PixbufAnimationIter = Object<ffi::GdkPixbufAnimationIter>;
+glib_wrapper! {
+    pub struct PixbufAnimationIter(Object<ffi::GdkPixbufAnimationIter>);
 
-impl StaticType for PixbufAnimationIter {
-    fn static_type() -> Type { unsafe { from_glib(ffi::gdk_pixbuf_animation_iter_get_type()) } }
+    match fn {
+        get_type => || ffi::gdk_pixbuf_animation_iter_get_type(),
+    }
 }
 
 impl PixbufAnimationIter {
@@ -43,10 +42,12 @@ impl PixbufAnimationIter {
     }
 }
 
-pub type PixbufAnimation = Object<ffi::GdkPixbufAnimation>;
+glib_wrapper! {
+    pub struct PixbufAnimation(Object<ffi::GdkPixbufAnimation>);
 
-impl StaticType for PixbufAnimation {
-    fn static_type() -> Type { unsafe { from_glib(ffi::gdk_pixbuf_animation_get_type()) } }
+    match fn {
+        get_type => || ffi::gdk_pixbuf_animation_get_type(),
+    }
 }
 
 impl PixbufAnimation {
@@ -93,42 +94,42 @@ pub trait PixbufAnimationExt {
 
 impl<T: Upcast<PixbufAnimation>> PixbufAnimationExt for T {
     fn get_width(&self) -> i32 {
-        unsafe { ffi::gdk_pixbuf_animation_get_width(self.upcast().to_glib_none().0) }
+        unsafe { ffi::gdk_pixbuf_animation_get_width(self.to_glib_none().0) }
     }
 
     fn get_height(&self) -> i32 {
-        unsafe { ffi::gdk_pixbuf_animation_get_height(self.upcast().to_glib_none().0) }
+        unsafe { ffi::gdk_pixbuf_animation_get_height(self.to_glib_none().0) }
     }
 
     fn get_iter(&self, start_time: &TimeVal) -> PixbufAnimationIter {
         unsafe {
             from_glib_full(
-                ffi::gdk_pixbuf_animation_get_iter(self.upcast().to_glib_none().0,
+                ffi::gdk_pixbuf_animation_get_iter(self.to_glib_none().0,
                                                    mem::transmute(start_time)))
         }
     }
 
     fn is_static_image(&self) -> bool {
         unsafe {
-            from_glib(ffi::gdk_pixbuf_animation_is_static_image(self.upcast().to_glib_none().0))
+            from_glib(ffi::gdk_pixbuf_animation_is_static_image(self.to_glib_none().0))
         }
     }
 
     fn get_static_image(&self) -> Option<Pixbuf> {
         unsafe {
             from_glib_none(ffi::gdk_pixbuf_animation_get_static_image(
-                self.upcast().to_glib_none().0))
+                self.to_glib_none().0))
         }
     }
 }
 
-pub type PixbufSimpleAnim = Object<ffi::GdkPixbufSimpleAnim>;
+glib_wrapper! {
+    pub struct PixbufSimpleAnim(Object<ffi::GdkPixbufSimpleAnim>): PixbufAnimation;
 
-impl StaticType for PixbufSimpleAnim {
-    fn static_type() -> Type { unsafe { from_glib(ffi::gdk_pixbuf_simple_anim_get_type()) } }
+    match fn {
+        get_type => || ffi::gdk_pixbuf_simple_anim_get_type(),
+    }
 }
-
-unsafe impl Upcast<PixbufAnimation> for PixbufSimpleAnim { }
 
 impl PixbufSimpleAnim {
     pub fn new(width: i32, height: i32, rate: f32) -> PixbufSimpleAnim {

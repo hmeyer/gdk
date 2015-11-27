@@ -4,20 +4,20 @@
 
 
 use glib::translate::*;
-use glib::types::{StaticType, Type};
 use display::Display;
-use object::Object;
 use ffi;
 
-/// Maintains a list of all open GdkDisplays
-pub type DisplayManager = Object<ffi::GdkDisplayManager>;
+glib_wrapper! {
+    pub struct DisplayManager(Object<ffi::GdkDisplayManager>);
 
-impl StaticType for DisplayManager {
-    fn static_type() -> Type { unsafe { from_glib(ffi::gdk_display_manager_get_type()) } }
+    match fn {
+        get_type => || ffi::gdk_display_manager_get_type(),
+    }
 }
 
 impl DisplayManager {
     pub fn get() -> DisplayManager {
+        assert_initialized_main_thread!();
         unsafe { from_glib_none(ffi::gdk_display_manager_get()) }
     }
 

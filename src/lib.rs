@@ -2,12 +2,9 @@
 // See the COPYRIGHT file at the top-level directory of this distribution.
 // Licensed under the MIT license, see the LICENSE file or <http://opensource.org/licenses/MIT>
 
-/*!
-Bindings and wrappers for __GDK__
-*/
-
 extern crate gdk_pixbuf_sys as gdk_pixbuf_ffi;
 extern crate gdk_sys as gdk_ffi;
+#[macro_use]
 extern crate glib as glib_main;
 extern crate cairo;
 extern crate libc;
@@ -15,11 +12,12 @@ extern crate libc;
 pub use gdk_ffi as ffi;
 pub use glib_main as glib;
 
+#[macro_use]
+mod rt;
+
 mod events;
 mod keys;
-mod object;
 mod rectangle;
-mod rt;
 
 pub mod prelude;
 pub mod enums;
@@ -49,6 +47,7 @@ pub use gdk_ffi::GdkColor as Color;
 
 pub use self::rt::{
     init,
+    set_initialized,
     get_display_arg_name,
     notify_startup_complete,
     notify_startup_complete_with_id,

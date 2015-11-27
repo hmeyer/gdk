@@ -2,24 +2,23 @@
 // See the COPYRIGHT file at the top-level directory of this distribution.
 // Licensed under the MIT license, see the LICENSE file or <http://opensource.org/licenses/MIT>
 
-//! Visuals — Low-level display hardware information
-
 use std::ptr;
 use std::slice;
 use glib::translate::*;
-use glib::types::{StaticType, Type};
-use object::Object;
 use screen::Screen;
 use ffi;
 
-pub type Visual = Object<ffi::GdkVisual>;
+glib_wrapper! {
+    pub struct Visual(Object<ffi::GdkVisual>);
 
-impl StaticType for Visual {
-    fn static_type() -> Type { unsafe { from_glib(ffi::gdk_visual_get_type()) } }
+    match fn {
+        get_type => || ffi::gdk_visual_get_type(),
+    }
 }
 
 impl Visual {
     pub fn query_depths() -> Vec<i32> {
+        assert_initialized_main_thread!();
         let mut ptr = ptr::null_mut();
         let mut count = 0;
 
@@ -73,18 +72,22 @@ impl Visual {
     }
 
     pub fn get_best_depth() -> i32 {
+        assert_initialized_main_thread!();
         unsafe { ffi::gdk_visual_get_best_depth() }
     }
 
     pub fn get_system() -> Visual {
+        assert_initialized_main_thread!();
         unsafe { from_glib_none(ffi::gdk_visual_get_system()) }
     }
 
     pub fn get_best() -> Visual {
+        assert_initialized_main_thread!();
         unsafe { from_glib_none(ffi::gdk_visual_get_best()) }
     }
 
     pub fn get_best_with_depth(depth: i32) -> Option<Visual> {
+        assert_initialized_main_thread!();
         unsafe { from_glib_none(ffi::gdk_visual_get_best_with_depth(depth)) }
     }
 
